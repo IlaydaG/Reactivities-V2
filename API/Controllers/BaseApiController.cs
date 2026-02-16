@@ -6,9 +6,9 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class BaseApiController : ControllerBase
+    public class BaseApiController : ControllerBase  //Amaç Mediator injection’ı tek bir yere koymak.her yerde mediator yazmakla uğraşmamak
     {
-        private IMediator? _mediator;
+        private IMediator? _mediator; //mediator parametre adı _mediator bu private field adı karıştırma
 
         protected IMediator Mediator => 
             _mediator ??= HttpContext.RequestServices.GetService<IMediator>()
