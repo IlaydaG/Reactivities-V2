@@ -1,41 +1,56 @@
-import { Paper, Typography ,Box, TextField, Button} from "@mui/material";
-import {  type FormEvent } from "react";
+import { Paper, Typography, Box, TextField, Button } from "@mui/material";
+import { type FormEvent } from "react";
 import { useActivities } from "../../../lib/hooks/useActivities";
+import { useNavigate, useParams } from "react-router";
 
-type Props ={
-    activity?: IActivity
-    closeForm: ()=> void;
-}
+export default function ActivityForm() {
+  const today = new Date().toISOString().split('T')[0]; //tarih için 
 
+  const {id} = useParams();
+  const { updateActivity, createActivity ,activity ,isLoadingActivity} = useActivities(id);
+  const navigate = useNavigate();
 
-export default function ActivityForm({activity,closeForm}: Props) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => { 
+    event.preventDefault(); 
+  
+  const formData = new FormData(event.currentTarget); 
+  const activityData: IActivity = { 
+    id: activity?.id, // edit ise mevcut id 
+    title: formData.get('title') as string, 
+    description: formData.get('description') as string, 
+    category: formData.get('category') as string, 
+    date: formData.get('date') as string, 
+    city: formData.get('city') as string, 
+    venue: formData.get('venue') as string, 
+    isCancelled: false, 
+    latitude: 0, 
+    longitude: 0 };
+  
+    const data :{[key:string]: FormDataEntryValue}={} 
+      formData.forEach((value,key) => 
+        { data[key]= value; }); 
+    
+    if (activity) { 
+      await updateActivity.mutateAsync(activityData); 
+      navigate(`/activities/${activity.id}`); 
+    } 
+      else { 
+        createActivity.mutate(activityData,{ 
+          onSuccess:(id) => { 
+            navigate(`/activities/${id}`) 
+          } 
+        }); 
+      } 
+  };
 
-  const {updateActivity , createActivity} = useActivities();
+  
 
-  const handleSubmit = async (event:FormEvent<HTMLFormElement>) =>{
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    const data: {[key:string]: FormDataEntryValue} = {};
-
-    formData.forEach((value,key)=>{
-      data[key] = value;
-    });
-
-    if (activity) {
-      data.id = activity.id;
-      await updateActivity.mutateAsync(data as unknown as IActivity);
-      closeForm();
-    } else {
-        await createActivity.mutateAsync(data as unknown as IActivity)
-        closeForm();
-    }
-  }
+  if(isLoadingActivity) return <Typography>Loading...</Typography>
 
   return (
     <Paper sx={{borderRadius:3, padding:3}}>
       <Typography variant="h5" gutterBottom color="primary">
-        Edit Activity
+        {activity ? 'Edit activity' : 'Create activity'}
       </Typography>
 
       <Box component='form' onSubmit={handleSubmit}
@@ -48,13 +63,15 @@ export default function ActivityForm({activity,closeForm}: Props) {
           name='date'
           label='Date'
           type='date'
-          defaultValue={activity?.date?.split('T')[0] ?? ''}
+          defaultValue={
+            activity?.date?.split('T')[0] ?? today
+          }
         />
         <TextField name='city' label='City' defaultValue={activity?.city}/>
         <TextField name='venue' label='Venue' defaultValue={activity?.venue}/>
 
         <Box display='flex' justifyContent='end' gap={3}>
-          <Button onClick={closeForm} color="inherit">
+          <Button color="inherit">
             Cancel
           </Button>
 
@@ -62,7 +79,7 @@ export default function ActivityForm({activity,closeForm}: Props) {
             type="submit"
             color="success"
             variant="contained"
-            loading={updateActivity.isPending || createActivity.isPending}
+            disabled={updateActivity.isPending || createActivity.isPending}
           >
             Submit
           </Button>
