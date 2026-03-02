@@ -1,0 +1,31 @@
+import { makeAutoObservable} from 'mobx';
+
+export default class CounterStore{
+
+    title =' Counter store';
+    count =0;
+    events: string[] = [
+        `İnitial count is ${this.count}`
+    ];
+
+
+
+    constructor(){
+        makeAutoObservable(this);
+    }
+
+    increment = (amount=1) => {
+         this.count += amount;
+         this.events.push(`incremented by ${amount} - count is now ${this.count}`);
+    }
+
+    decrement = (amount=1) => {
+        this.count -= amount;
+         this.events.push(`decremented by ${amount} - count is now ${this.count}`);
+    }
+
+    geteventCount (){
+        return this.events.length;
+    }
+
+}
