@@ -11,7 +11,7 @@ export class UiStore {
         this.isLoading = true;
     }
 
-    idIdle(){
+    isIdle(){
         this.isLoading = false;
     }
 }
